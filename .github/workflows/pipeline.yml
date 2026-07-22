@@ -1,0 +1,51 @@
+name: TaskFlow Flask CI/CD with Caching
+
+on:
+    push:
+        branches: [main]
+
+jobs:
+    test-and-build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: "3.12"
+                cache: "pip"
+
+            - name: Upgrade pip
+              run: python -m pip install --upgrade pip
+            
+            - name: Install Python Dependencies
+              run: pip install -r requirements-dev.txt
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: "20"
+                cache: "npm"
+
+            - name: Install Node Dependencies
+              run: npm ci
+
+            - name: Run Linter
+              run: npm run lint
+
+            - name: Build Tailwind CSS
+              run: npm run build:css
+
+            - name: Run Tests
+              run: pytest
+
+    deploy:
+        needs: test-and-build
+        runs-on: ubuntu-latest
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        steps:
+            - name: Trigger Deployment
+              run: curl -f "${{ secrets.RENDER_DEPLOY_HOOK }}"
