@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}TaskFlow{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+  <script>
+    (function () {
+      var stored = localStorage.getItem('theme');
+      var theme = stored || "{{ g.current_user.theme if g.current_user else 'light' }}";
+      if (!stored) localStorage.setItem('theme', theme);
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+</head>
+<body class="h-full font-sans">
+  {% include 'partials/sidebar.html' %}
+
+  <div class="flex min-h-full flex-col lg:pl-64">
+    {% include 'partials/topbar.html' %}
+
+    <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <div id="toast-container" class="fixed bottom-4 right-4 z-[100] flex w-full max-w-sm flex-col gap-2 sm:bottom-6 sm:right-6"></div>
+
+  <script>
+    window.__FLASHED_MESSAGES__ = [
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+        ["{{ category }}", {{ message | tojson }}],
+      {% endfor %}
+    ];
+  </script>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

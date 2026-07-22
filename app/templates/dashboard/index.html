@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% import 'partials/badges.html' as b %}
+{% block title %}Dashboard · TaskFlow{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in space-y-6">
+  <div class="card p-5 sm:p-6">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Welcome back, {{ g.current_user.name.split(' ')[0] }} 👋</h2>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      Here's what's happening with your tasks today, {{ now.strftime('%A, %B %d') }}.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="card p-5">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Total tasks</span>
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-500/10"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75l1.5 1.5L15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+      </div>
+      <p class="mt-3 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_tasks }}</p>
+    </div>
+    <div class="card p-5">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</span>
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 text-green-600 dark:bg-green-500/10"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div>
+      </div>
+      <p class="mt-3 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.completed_tasks }}</p>
+    </div>
+    <div class="card p-5">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</span>
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/10"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor"/></svg></div>
+      </div>
+      <p class="mt-3 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.pending_tasks }}</p>
+    </div>
+    <div class="card p-5">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Overdue</span>
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-600 dark:bg-red-500/10"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg></div>
+      </div>
+      <p class="mt-3 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.overdue_tasks }}</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="card p-5 sm:p-6 lg:col-span-2">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white">Productivity — last 7 days</h3>
+        <span class="badge bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400">{{ stats.productivity }}% overall</span>
+      </div>
+      <div class="mt-4 h-64">
+        <canvas id="productivityChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card p-5 sm:p-6">
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white">Upcoming tasks</h3>
+      <div class="mt-4 space-y-3">
+        {% for task in upcoming_tasks %}
+        <a href="{{ url_for('tasks.index') }}?highlight={{ task.id }}" class="flex items-start gap-3 rounded-lg border border-gray-100 p-3 transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
+          <div class="mt-0.5 h-2 w-2 shrink-0 rounded-full" style="background-color: {{ task.project.color if task.project else '#6366f1' }}"></div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium text-gray-800 dark:text-gray-100">{{ task.title }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ task.due_date.strftime('%b %d, %I:%M %p') }}</p>
+          </div>
+          {{ b.priority_badge(task.priority.value) }}
+        </a>
+        {% else %}
+        <p class="py-6 text-center text-sm text-gray-400">No upcoming tasks. You're all caught up!</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-5 sm:p-6">
+    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Recent activity</h3>
+    <div class="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
+      {% for task in recent_activity %}
+      <div class="flex flex-wrap items-center justify-between gap-2 py-3">
+        <div class="flex items-center gap-3">
+          <div class="flex h-8 w-8 items-center justify-center rounded-full {{ 'bg-green-50 text-green-600 dark:bg-green-500/10' if task.is_completed else 'bg-gray-100 text-gray-500 dark:bg-gray-800' }}">
+            {% if task.is_completed %}
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            {% else %}
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4"/></svg>
+            {% endif %}
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ task.title }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Updated {{ task.updated_at.strftime('%b %d, %Y %I:%M %p') }}</p>
+          </div>
+        </div>
+        {{ b.status_badge(task.status.value) }}
+      </div>
+      {% else %}
+      <p class="py-6 text-center text-sm text-gray-400">No activity yet. Create your first task to get started.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.addEventListener('load', function () {
+    var ctx = document.getElementById('productivityChart');
+    if (!ctx || !window.Chart) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: {{ stats.week_labels | tojson }},
+        datasets: [{
+          label: 'Tasks completed',
+          data: {{ stats.week_counts | tojson }},
+          backgroundColor: '#6366f1',
+          borderRadius: 6,
+          maxBarThickness: 36,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+      },
+    });
+  });
+</script>
+{% endblock %}

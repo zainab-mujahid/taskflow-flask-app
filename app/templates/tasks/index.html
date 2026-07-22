@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% import 'partials/badges.html' as b %}
+{% import 'partials/pagination.html' as p %}
+{% block title %}Tasks · TaskFlow{% endblock %}
+{% block page_title %}Tasks{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in space-y-5">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex rounded-lg border border-gray-200 bg-white p-1 text-sm dark:border-gray-800 dark:bg-gray-900">
+      <a href="{{ url_for('tasks.index', **dict(filters.to_dict(), view='kanban')) }}" class="rounded-md px-3 py-1.5 font-medium {{ 'bg-primary-600 text-white' if view == 'kanban' else 'text-gray-500 dark:text-gray-400' }}">Kanban</a>
+      <a href="{{ url_for('tasks.index', **dict(filters.to_dict(), view='list')) }}" class="rounded-md px-3 py-1.5 font-medium {{ 'bg-primary-600 text-white' if view == 'list' else 'text-gray-500 dark:text-gray-400' }}">List</a>
+    </div>
+    <a href="{{ url_for('tasks.create') }}" class="btn-primary">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      New Task
+    </a>
+  </div>
+
+  <form method="GET" action="{{ url_for('tasks.index') }}" class="card flex flex-wrap items-end gap-3 p-4">
+    <input type="hidden" name="view" value="{{ view }}">
+    <div class="min-w-[180px] flex-1">
+      <label class="label text-xs">Search</label>
+      <input type="text" name="search" value="{{ filters.get('search', '') }}" placeholder="Search tasks..." class="input">
+    </div>
+    <div>
+      <label class="label text-xs">Project</label>
+      <select name="project" class="input">
+        <option value="">All projects</option>
+        {% for project in projects %}
+        <option value="{{ project.id }}" {{ 'selected' if filters.get('project') == project.id | string }}>{{ project.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label text-xs">Priority</label>
+      <select name="priority" class="input">
+        <option value="">All priorities</option>
+        <option value="HIGH" {{ 'selected' if filters.get('priority') == 'HIGH' }}>High</option>
+        <option value="MEDIUM" {{ 'selected' if filters.get('priority') == 'MEDIUM' }}>Medium</option>
+        <option value="LOW" {{ 'selected' if filters.get('priority') == 'LOW' }}>Low</option>
+      </select>
+    </div>
+    {% if view == 'list' %}
+    <div>
+      <label class="label text-xs">Status</label>
+      <select name="status" class="input">
+        <option value="">All statuses</option>
+        <option value="TODO" {{ 'selected' if filters.get('status') == 'TODO' }}>To Do</option>
+        <option value="IN_PROGRESS" {{ 'selected' if filters.get('status') == 'IN_PROGRESS' }}>In Progress</option>
+        <option value="COMPLETED" {{ 'selected' if filters.get('status') == 'COMPLETED' }}>Completed</option>
+      </select>
+    </div>
+    {% endif %}
+    <div>
+      <label class="label text-xs">Due</label>
+      <select name="due" class="input">
+        <option value="">Any time</option>
+        <option value="today" {{ 'selected' if filters.get('due') == 'today' }}>Today</option>
+        <option value="week" {{ 'selected' if filters.get('due') == 'week' }}>Next 7 days</option>
+        <option value="overdue" {{ 'selected' if filters.get('due') == 'overdue' }}>Overdue</option>
+        <option value="no_date" {{ 'selected' if filters.get('due') == 'no_date' }}>No due date</option>
+      </select>
+    </div>
+    {% if tags %}
+    <div>
+      <label class="label text-xs">Tag</label>
+      <select name="tag" class="input">
+        <option value="">All tags</option>
+        {% for tag in tags %}
+        <option value="{{ tag.id }}" {{ 'selected' if filters.get('tag') == tag.id | string }}>{{ tag.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    {% if view == 'list' %}
+    <div>
+      <label class="label text-xs">Sort by</label>
+      <select name="sort" class="input">
+        <option value="newest" {{ 'selected' if filters.get('sort', 'newest') == 'newest' }}>Newest first</option>
+        <option value="oldest" {{ 'selected' if filters.get('sort') == 'oldest' }}>Oldest first</option>
+        <option value="due_date" {{ 'selected' if filters.get('sort') == 'due_date' }}>Due date</option>
+        <option value="priority" {{ 'selected' if filters.get('sort') == 'priority' }}>Priority</option>
+      </select>
+    </div>
+    {% endif %}
+    <div class="flex gap-2">
+      <button type="submit" class="btn-primary">Apply</button>
+      <a href="{{ url_for('tasks.index', view=view) }}" class="btn-ghost">Reset</a>
+    </div>
+  </form>
+
+  {% if view == 'kanban' %}
+    {% include 'tasks/_kanban.html' %}
+  {% else %}
+    {% include 'tasks/_list.html' %}
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/tasks.js') }}"></script>
+{% endblock %}

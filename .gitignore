@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.env
+instance/
+node_modules/
+app/static/css/output.css
+app/static/uploads/avatars/*
+!app/static/uploads/avatars/.gitkeep
+*.log
+logs/
+*.db
+.DS_Store
+migrations/versions/*.pyc

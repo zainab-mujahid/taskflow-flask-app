@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if mode == 'edit' else 'New' }} Task · TaskFlow{% endblock %}
+{% block page_title %}{{ 'Edit Task' if mode == 'edit' else 'New Task' }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl animate-slide-up">
+  <div class="card p-6 sm:p-8">
+    <form method="POST" action="{{ url_for('tasks.edit', task_id=task.id) if mode == 'edit' else url_for('tasks.create') }}" class="space-y-5" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div>
+        <label class="label" for="title">Title</label>
+        <input class="input {{ 'input-error' if errors.get('title') }}" type="text" id="title" name="title"
+               value="{{ form_data.get('title', '') }}" placeholder="e.g. Finish quarterly report" autofocus required>
+        {% if errors.get('title') %}<p class="error-text">{{ errors['title'][0] }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="label" for="description">Notes / Description</label>
+        <textarea class="input {{ 'input-error' if errors.get('description') }}" id="description" name="description" rows="4"
+                  placeholder="Add any extra details...">{{ form_data.get('description', '') }}</textarea>
+        {% if errors.get('description') %}<p class="error-text">{{ errors['description'][0] }}</p>{% endif %}
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="project_id">Project</label>
+          <select class="input" id="project_id" name="project_id">
+            <option value="">No project</option>
+            {% for project in projects %}
+            <option value="{{ project.id }}" {{ 'selected' if form_data.get('project_id') | string == project.id | string }}>{{ project.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label" for="status">Status</label>
+          <select class="input" id="status" name="status">
+            <option value="TODO" {{ 'selected' if form_data.get('status') == 'TODO' }}>To Do</option>
+            <option value="IN_PROGRESS" {{ 'selected' if form_data.get('status') == 'IN_PROGRESS' }}>In Progress</option>
+            <option value="COMPLETED" {{ 'selected' if form_data.get('status') == 'COMPLETED' }}>Completed</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="label">Priority</label>
+        <div class="flex gap-2">
+          {% for value, label in [('LOW','Low'), ('MEDIUM','Medium'), ('HIGH','High')] %}
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="priority" value="{{ value }}" class="peer sr-only" {{ 'checked' if form_data.get('priority', 'MEDIUM') == value }}>
+            <span class="block rounded-lg border border-gray-200 py-2 text-center text-sm font-medium text-gray-600 peer-checked:border-primary-500 peer-checked:bg-primary-50 peer-checked:text-primary-700 dark:border-gray-700 dark:text-gray-300 dark:peer-checked:bg-primary-500/10 dark:peer-checked:text-primary-400">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="start_date">Start date</label>
+          <input class="input" type="date" id="start_date" name="start_date" value="{{ form_data.get('start_date', '') }}">
+        </div>
+        <div>
+          <label class="label" for="due_date">Due date & time</label>
+          <input class="input {{ 'input-error' if errors.get('due_date') }}" type="datetime-local" id="due_date" name="due_date" value="{{ form_data.get('due_date', '') }}">
+          {% if errors.get('due_date') %}<p class="error-text">{{ errors['due_date'][0] }}</p>{% endif %}
+        </div>
+      </div>
+
+      {% if tags %}
+      <div>
+        <label class="label">Tags</label>
+        <div class="flex flex-wrap gap-2">
+          {% for tag in tags %}
+          <label class="cursor-pointer">
+            <input type="checkbox" name="tags" value="{{ tag.id }}" class="peer sr-only" {{ 'checked' if tag.id in selected_tag_ids }}>
+            <span class="badge border border-gray-200 peer-checked:border-transparent dark:border-gray-700" style="{{ ('background-color:' ~ tag.color ~ '22; color:' ~ tag.color ~ ';') if tag.id in selected_tag_ids else '' }}">{{ tag.name }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        No tags yet. <a href="{{ url_for('tags.index') }}" class="font-medium text-primary-600 hover:text-primary-500">Create one</a> to organize this task.
+      </p>
+      {% endif %}
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <a href="{{ url_for('tasks.index') }}" class="btn-secondary">Cancel</a>
+        <button type="submit" class="btn-primary">{{ 'Save changes' if mode == 'edit' else 'Create task' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

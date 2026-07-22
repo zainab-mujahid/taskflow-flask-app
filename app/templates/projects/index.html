@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% import 'partials/badges.html' as b %}
+{% import 'partials/project_icons.html' as pi %}
+{% block title %}Projects · TaskFlow{% endblock %}
+{% block page_title %}Projects{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex rounded-lg border border-gray-200 bg-white p-1 text-sm dark:border-gray-800 dark:bg-gray-900">
+      <a href="{{ url_for('projects.index') }}" class="rounded-md px-3 py-1.5 font-medium {{ 'bg-primary-600 text-white' if not show_archived else 'text-gray-500 dark:text-gray-400' }}">Active</a>
+      <a href="{{ url_for('projects.index', archived=1) }}" class="rounded-md px-3 py-1.5 font-medium {{ 'bg-primary-600 text-white' if show_archived else 'text-gray-500 dark:text-gray-400' }}">Archived</a>
+    </div>
+    <a href="{{ url_for('projects.create') }}" class="btn-primary">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      New Project
+    </a>
+  </div>
+
+  {% if projects %}
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    {% for project in projects %}
+    <div class="card group relative p-5">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl" style="background-color: {{ project.color }}22; color: {{ project.color }}">
+            {{ pi.project_icon(project.icon, 'h-5 w-5') }}
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900 dark:text-white">{{ project.name }}</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ project.task_count }} task{{ 's' if project.task_count != 1 else '' }}</p>
+          </div>
+        </div>
+        <div class="relative">
+          <button data-dropdown-toggle="project-menu-{{ project.id }}" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zm0 5.25h.008v.008H12V12zm0 5.25h.008v.008H12v-5.25z"/></svg>
+          </button>
+          <div id="project-menu-{{ project.id }}" class="dropdown-menu absolute right-0 z-10 mt-1 hidden w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <a href="{{ url_for('projects.edit', project_id=project.id) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">Edit</a>
+            <a href="{{ url_for('tasks.index', project=project.id) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">View tasks</a>
+            <form method="POST" action="{{ url_for('projects.archive', project_id=project.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">{{ 'Restore' if project.is_archived else 'Archive' }}</button>
+            </form>
+            <form method="POST" action="{{ url_for('projects.delete', project_id=project.id) }}" data-confirm="Delete &quot;{{ project.name }}&quot;? This cannot be undone.">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-700">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {% if project.description %}
+      <p class="mt-3 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">{{ project.description }}</p>
+      {% endif %}
+
+      <div class="mt-4">
+        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span>Progress</span>
+          <span>{{ project.progress_percent }}%</span>
+        </div>
+        <div class="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+          <div class="h-full rounded-full transition-all duration-500" style="width: {{ project.progress_percent }}%; background-color: {{ project.color }}"></div>
+        </div>
+      </div>
+
+      <a href="{{ url_for('tasks.index', project=project.id) }}" class="mt-4 flex items-center justify-center gap-1 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+        View tasks
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    {{ b.empty_state(
+      'No projects yet' if not show_archived else 'No archived projects',
+      'Create a project to start grouping related tasks together.' if not show_archived else 'Archived projects will show up here.',
+      action_label='New Project' if not show_archived else None,
+      action_url=url_for('projects.create') if not show_archived else None
+    ) }}
+  {% endif %}
+</div>
+{% endblock %}

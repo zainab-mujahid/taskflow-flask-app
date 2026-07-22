@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Profile & Settings · TaskFlow{% endblock %}
+{% block page_title %}Profile & Settings{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in mx-auto max-w-3xl space-y-6">
+
+  <div class="card p-5 sm:p-6">
+    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Profile picture</h3>
+    <div class="mt-4 flex items-center gap-5">
+      {% if g.current_user.avatar_url %}
+        <img src="{{ g.current_user.avatar_url }}" class="h-16 w-16 rounded-full object-cover" alt="Avatar">
+      {% else %}
+        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-xl font-semibold text-white">
+          {{ g.current_user.name[:1].upper() }}
+        </div>
+      {% endif %}
+      <form method="POST" action="{{ url_for('profile.upload_avatar') }}" enctype="multipart/form-data" class="flex items-center gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="btn-secondary cursor-pointer">
+          <input type="file" name="avatar" accept=".png,.jpg,.jpeg,.webp,.gif" class="hidden" onchange="this.form.requestSubmit()">
+          Upload new picture
+        </label>
+      </form>
+    </div>
+    <p class="mt-2 text-xs text-gray-400">PNG, JPG, WEBP or GIF. Max 2MB.</p>
+  </div>
+
+  <div class="card p-5 sm:p-6">
+    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Personal information</h3>
+    <form method="POST" action="{{ url_for('profile.update_profile') }}" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div>
+        <label class="label" for="name">Full name</label>
+        <input class="input {{ 'input-error' if profile_errors.get('name') }}" type="text" id="name" name="name" value="{{ g.current_user.name }}" required>
+        {% if profile_errors.get('name') %}<p class="error-text">{{ profile_errors['name'][0] }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="label" for="email">Email address</label>
+        <input class="input {{ 'input-error' if profile_errors.get('email') }}" type="email" id="email" name="email" value="{{ g.current_user.email }}" required>
+        {% if profile_errors.get('email') %}<p class="error-text">{{ profile_errors['email'][0] }}</p>{% endif %}
+      </div>
+      <div class="sm:col-span-2">
+        <button type="submit" class="btn-primary">Save changes</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card p-5 sm:p-6">
+    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Change password</h3>
+    <form method="POST" action="{{ url_for('profile.change_password') }}" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="sm:col-span-2">
+        <label class="label" for="current_password">Current password</label>
+        <input class="input {{ 'input-error' if password_errors.get('current_password') }}" type="password" id="current_password" name="current_password" required>
+        {% if password_errors.get('current_password') %}<p class="error-text">{{ password_errors['current_password'][0] }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="label" for="new_password">New password</label>
+        <input class="input {{ 'input-error' if password_errors.get('new_password') }}" type="password" id="new_password" name="new_password" required>
+        {% if password_errors.get('new_password') %}<p class="error-text">{{ password_errors['new_password'][0] }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="label" for="confirm_password">Confirm new password</label>
+        <input class="input {{ 'input-error' if password_errors.get('confirm_password') }}" type="password" id="confirm_password" name="confirm_password" required>
+        {% if password_errors.get('confirm_password') %}<p class="error-text">{{ password_errors['confirm_password'][0] }}</p>{% endif %}
+      </div>
+      <div class="sm:col-span-2">
+        <button type="submit" class="btn-primary">Update password</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card p-5 sm:p-6">
+    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Appearance</h3>
+    <div class="mt-4 flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Dark mode</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Switch between light and dark themes.</p>
+      </div>
+      <button type="button" onclick="window.TaskFlowTheme.toggle()" class="btn-secondary">Toggle theme</button>
+    </div>
+  </div>
+
+  <div class="card p-5 sm:p-6">
+    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Account</h3>
+    <dl class="mt-4 space-y-2 text-sm">
+      <div class="flex justify-between"><dt class="text-gray-500 dark:text-gray-400">Member since</dt><dd class="text-gray-700 dark:text-gray-200">{{ g.current_user.created_at.strftime('%B %d, %Y') }}</dd></div>
+    </dl>
+  </div>
+</div>
+{% endblock %}

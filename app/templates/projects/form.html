@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% import 'partials/project_icons.html' as pi %}
+{% block title %}{{ 'Edit' if mode == 'edit' else 'New' }} Project · TaskFlow{% endblock %}
+{% block page_title %}{{ 'Edit Project' if mode == 'edit' else 'New Project' }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-xl animate-slide-up">
+  <div class="card p-6 sm:p-8">
+    <form method="POST" action="{{ url_for('projects.edit', project_id=project.id) if mode == 'edit' else url_for('projects.create') }}" class="space-y-5" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div>
+        <label class="label" for="name">Project name</label>
+        <input class="input {{ 'input-error' if errors.get('name') }}" type="text" id="name" name="name"
+               value="{{ form_data.get('name', '') }}" placeholder="e.g. Website Redesign" autofocus required>
+        {% if errors.get('name') %}<p class="error-text">{{ errors['name'][0] }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="label" for="description">Description</label>
+        <textarea class="input {{ 'input-error' if errors.get('description') }}" id="description" name="description" rows="3"
+                  placeholder="What is this project about?">{{ form_data.get('description', '') }}</textarea>
+        {% if errors.get('description') %}<p class="error-text">{{ errors['description'][0] }}</p>{% endif %}
+      </div>
+
+      <div>
+        <label class="label">Color</label>
+        <div class="flex flex-wrap gap-2">
+          {% for c in colors %}
+          <label class="cursor-pointer">
+            <input type="radio" name="color" value="{{ c }}" class="peer sr-only" {{ 'checked' if form_data.get('color') == c }}>
+            <span class="block h-9 w-9 rounded-full ring-offset-2 peer-checked:ring-2 peer-checked:ring-gray-900 dark:peer-checked:ring-white dark:ring-offset-gray-900" style="background-color: {{ c }}"></span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <label class="label">Icon</label>
+        <div class="flex flex-wrap gap-2">
+          {% for i in icons %}
+          <label class="cursor-pointer">
+            <input type="radio" name="icon" value="{{ i }}" class="peer sr-only" {{ 'checked' if form_data.get('icon') == i }}>
+            <span class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 peer-checked:border-primary-500 peer-checked:bg-primary-50 peer-checked:text-primary-600 dark:border-gray-700 dark:text-gray-400 dark:peer-checked:bg-primary-500/10">
+              {{ pi.project_icon(i) }}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <a href="{{ url_for('projects.index') }}" class="btn-secondary">Cancel</a>
+        <button type="submit" class="btn-primary">{{ 'Save changes' if mode == 'edit' else 'Create project' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

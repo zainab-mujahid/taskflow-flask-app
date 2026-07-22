@@ -1,0 +1,80 @@
+{% import 'partials/badges.html' as b %}
+{% set columns_meta = [
+  ('TODO', 'To Do', 'bg-gray-400'),
+  ('IN_PROGRESS', 'In Progress', 'bg-blue-500'),
+  ('COMPLETED', 'Completed', 'bg-green-500')
+] %}
+
+<div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+  {% for status, label, dot in columns_meta %}
+  {% set col_tasks = columns.get(status, []) %}
+  <div class="kanban-column flex flex-col rounded-xl bg-gray-100/70 p-3 transition-shadow dark:bg-gray-900/50" data-status="{{ status }}" data-label="{{ label }}">
+    <div class="mb-3 flex items-center justify-between px-1">
+      <div class="flex items-center gap-2">
+        <span class="h-2.5 w-2.5 rounded-full {{ dot }}"></span>
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ label }}</h3>
+        <span class="kanban-count badge bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400">{{ col_tasks | length }}</span>
+      </div>
+      <a href="{{ url_for('tasks.create', status=status) }}" class="rounded-md p-1 text-gray-400 hover:bg-white hover:text-primary-600 dark:hover:bg-gray-800" title="Add task">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      </a>
+    </div>
+
+    <div class="kanban-list min-h-[120px] flex-1 space-y-3">
+      {% for task in col_tasks %}
+      <div id="task-card-{{ task.id }}" data-task-id="{{ task.id }}" draggable="true"
+           class="kanban-card card cursor-grab p-3.5 active:cursor-grabbing {{ 'ring-2 ring-primary-500' if task.id == highlight_id else '' }}">
+        <div class="flex items-start justify-between gap-2">
+          <label class="flex items-start gap-2">
+            <input type="checkbox" data-toggle-complete="{{ task.id }}" {{ 'checked' if task.is_completed }}
+                   class="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+            <span data-task-title class="text-sm font-medium text-gray-800 dark:text-gray-100 {{ 'line-through text-gray-400' if task.is_completed }}">{{ task.title }}</span>
+          </label>
+          <div class="relative shrink-0">
+            <button data-dropdown-toggle="task-menu-{{ task.id }}" class="rounded p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zm0 5.25h.008v.008H12V12zm0 5.25h.008v.008H12v-5.25z"/></svg>
+            </button>
+            <div id="task-menu-{{ task.id }}" class="dropdown-menu absolute right-0 z-10 mt-1 hidden w-36 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <a href="{{ url_for('tasks.edit', task_id=task.id) }}" class="block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">Edit</a>
+              <form method="POST" action="{{ url_for('tasks.duplicate', task_id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="block w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">Duplicate</button>
+              </form>
+              <form method="POST" action="{{ url_for('tasks.delete', task_id=task.id) }}" data-confirm="Delete this task?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="block w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-700">Delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {% if task.project %}
+        <div class="mt-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+          <span class="h-2 w-2 rounded-full" style="background-color: {{ task.project.color }}"></span>
+          {{ task.project.name }}
+        </div>
+        {% endif %}
+
+        {% if task.tags %}
+        <div class="mt-2 flex flex-wrap gap-1">
+          {% for tag in task.tags %}
+          <span class="badge" style="background-color: {{ tag.color }}22; color: {{ tag.color }}">{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+          {{ b.priority_badge(task.priority.value) }}
+          {% if task.due_date %}
+          <span class="flex items-center gap-1 text-xs font-medium {{ 'text-red-600 dark:text-red-400' if task.is_overdue else 'text-gray-500 dark:text-gray-400' }}">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor"/></svg>
+            {{ task.due_date.strftime('%b %d') }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>

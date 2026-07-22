@@ -1,0 +1,23 @@
+{% macro render_pagination(pagination, endpoint, args) %}
+{% if pagination.pages > 1 %}
+<div class="flex items-center justify-between border-t border-gray-100 px-2 pt-4 dark:border-gray-800">
+  <p class="text-sm text-gray-500 dark:text-gray-400">
+    Showing {{ (pagination.page - 1) * pagination.per_page + 1 }}–{{ [pagination.page * pagination.per_page, pagination.total] | min }} of {{ pagination.total }}
+  </p>
+  <div class="flex items-center gap-1">
+    {% set base_args = args.to_dict() %}
+    {% if pagination.has_prev %}
+    <a href="{{ url_for(endpoint, **dict(base_args, page=pagination.prev_num)) }}" class="btn-secondary px-3 py-1.5 text-xs">Previous</a>
+    {% else %}
+    <span class="btn-secondary px-3 py-1.5 text-xs opacity-40">Previous</span>
+    {% endif %}
+    <span class="px-2 text-sm text-gray-600 dark:text-gray-300">{{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a href="{{ url_for(endpoint, **dict(base_args, page=pagination.next_num)) }}" class="btn-secondary px-3 py-1.5 text-xs">Next</a>
+    {% else %}
+    <span class="btn-secondary px-3 py-1.5 text-xs opacity-40">Next</span>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endmacro %}

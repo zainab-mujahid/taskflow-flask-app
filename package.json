@@ -1,0 +1,16 @@
+{
+  "name": "taskflow-assets",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tailwind CSS build for the TaskFlow Flask app",
+  "scripts": {
+    "build:css": "tailwindcss -i ./app/static/src/input.css -o ./app/static/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./app/static/src/input.css -o ./app/static/css/output.css --watch",
+    "lint": "eslint app/static/js"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.10",
+    "eslint": "^9.9.0",
+    "@eslint/js": "^9.9.0"
+  }
+}

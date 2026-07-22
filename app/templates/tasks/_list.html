@@ -1,0 +1,75 @@
+{% import 'partials/badges.html' as b %}
+{% import 'partials/pagination.html' as p %}
+{% if tasks %}
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[760px] text-left text-sm">
+      <thead class="border-b border-gray-100 bg-gray-50/50 text-xs uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-900/50 dark:text-gray-400">
+        <tr>
+          <th class="w-10 px-4 py-3"></th>
+          <th class="px-2 py-3">Task</th>
+          <th class="px-2 py-3">Project</th>
+          <th class="px-2 py-3">Priority</th>
+          <th class="px-2 py-3">Status</th>
+          <th class="px-2 py-3">Due</th>
+          <th class="w-10 px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+        {% for task in tasks %}
+        <tr id="task-row-{{ task.id }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/60 {{ 'opacity-50' if task.is_completed }} {{ 'bg-primary-50/50 dark:bg-primary-500/5' if task.id == highlight_id }}">
+          <td class="px-4 py-3">
+            <input type="checkbox" data-toggle-complete="{{ task.id }}" {{ 'checked' if task.is_completed }}
+                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+          </td>
+          <td class="px-2 py-3">
+            <p data-task-title class="font-medium text-gray-800 dark:text-gray-100 {{ 'line-through text-gray-400' if task.is_completed }}">{{ task.title }}</p>
+            {% if task.tags %}
+            <div class="mt-1 flex flex-wrap gap-1">
+              {% for tag in task.tags %}
+              <span class="badge" style="background-color: {{ tag.color }}22; color: {{ tag.color }}">{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </td>
+          <td class="px-2 py-3 text-gray-600 dark:text-gray-300">
+            {% if task.project %}
+            <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full" style="background-color: {{ task.project.color }}"></span>{{ task.project.name }}</span>
+            {% else %}<span class="text-gray-400">—</span>{% endif %}
+          </td>
+          <td class="px-2 py-3">{{ b.priority_badge(task.priority.value) }}</td>
+          <td class="px-2 py-3">{{ b.status_badge(task.status.value) }}</td>
+          <td class="px-2 py-3 {{ 'text-red-600 dark:text-red-400 font-medium' if task.is_overdue else 'text-gray-500 dark:text-gray-400' }}">
+            {{ task.due_date.strftime('%b %d, %Y') if task.due_date else '—' }}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="relative inline-block">
+              <button data-dropdown-toggle="task-row-menu-{{ task.id }}" class="rounded p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75h.008v.008H12V6.75zm0 5.25h.008v.008H12V12zm0 5.25h.008v.008H12v-5.25z"/></svg>
+              </button>
+              <div id="task-row-menu-{{ task.id }}" class="dropdown-menu absolute right-0 z-10 mt-1 hidden w-36 rounded-lg border border-gray-200 bg-white py-1 text-left shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                <a href="{{ url_for('tasks.edit', task_id=task.id) }}" class="block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">Edit</a>
+                <form method="POST" action="{{ url_for('tasks.duplicate', task_id=task.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="block w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">Duplicate</button>
+                </form>
+                <form method="POST" action="{{ url_for('tasks.delete', task_id=task.id) }}" data-confirm="Delete this task?">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="block w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-700">Delete</button>
+                </form>
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="px-4 pb-4">
+    {{ p.render_pagination(pagination, 'tasks.index', filters) }}
+  </div>
+</div>
+{% else %}
+{% import 'partials/badges.html' as bd %}
+{{ bd.empty_state('No tasks found', 'Try adjusting your filters, or create a new task to get started.', action_label='New Task', action_url=url_for('tasks.create')) }}
+{% endif %}
